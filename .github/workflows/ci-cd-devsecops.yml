@@ -53,6 +53,7 @@ jobs:
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+          exit-code: '0'
 
       - name: Upload Trivy SARIF
         if: always()
