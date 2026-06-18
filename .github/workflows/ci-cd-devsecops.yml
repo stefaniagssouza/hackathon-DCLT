@@ -12,11 +12,9 @@ permissions:
   security-events: write
   id-token: write
 
-  
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAMESPACE: ${{ github.repository }}
+# env:
+#   REGISTRY: ghcr.io
+#   IMAGE_NAMESPACE: ${{ github.repository }}
 
 jobs:
   validate:
