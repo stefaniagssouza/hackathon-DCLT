@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: volunteer-service
+  namespace: volunteer
+  labels:
+    app: volunteer-service
+    app.kubernetes.io/name: volunteer-service
+    app.kubernetes.io/part-of: solidarytech
+    cost-center: NGO-Core
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: volunteer-service
+  template:
+    metadata:
+      labels:
+        app: volunteer-service
+        app.kubernetes.io/name: volunteer-service
+        app.kubernetes.io/part-of: solidarytech
+        cost-center: NGO-Core
+    spec:
+      serviceAccountName: volunteer-service
+      containers:
+        - name: volunteer-service
+          image: 914963610886.dkr.ecr.us-east-1.amazonaws.com/volunteer-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8083
+          envFrom:
+            - secretRef:
+                name: volunteer-secrets
+          env:
+            - name: PORT
+              value: "8083"
+            - name: OTEL_SERVICE_NAME
+              value: volunteer-service
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-gateway-opentelemetry-collector.observability.svc.cluster.local:4318
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+            - name: OTEL_METRICS_EXPORTER
+              value: otlp
+            - name: OTEL_LOGS_EXPORTER
+              value: otlp
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=solidarytech,deployment.environment=production,k8s.namespace.name=volunteer
+            - name: OTEL_PYTHON_LOG_CORRELATION
+              value: "true"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
