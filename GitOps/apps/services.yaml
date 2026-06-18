@@ -1,0 +1,127 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: solidarytech-namespaces
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/stefaniagssouza/hackathon-DCLT.git
+    targetRevision: main
+    path: GitOps/base/namespaces
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ngo-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/stefaniagssouza/hackathon-DCLT.git
+    targetRevision: main
+    path: GitOps/ngo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ngo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: donation-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/stefaniagssouza/hackathon-DCLT.git
+    targetRevision: main
+    path: GitOps/donation
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: donation
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: volunteer-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/stefaniagssouza/hackathon-DCLT.git
+    targetRevision: main
+    path: GitOps/volunteer
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: volunteer
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-apps
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/stefaniagssouza/hackathon-DCLT.git
+    targetRevision: main
+    path: GitOps/observability/apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dr-apps
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/stefaniagssouza/hackathon-DCLT.git
+    targetRevision: main
+    path: GitOps/dr/apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
