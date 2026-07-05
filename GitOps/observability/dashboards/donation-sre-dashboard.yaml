@@ -1,0 +1,206 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: donation-sre-dashboard
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/part-of: solidarytech
+data:
+  donation-sre-dashboard.json: |
+    {
+      "uid": "solidarytech-donation-sre",
+      "title": "SolidaryTech - Donation SRE",
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "tags": ["solidarytech", "sre", "slo", "donation"],
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Disponibilidade SLI - 5m",
+          "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "orange", "value": 0.995},
+                  {"color": "green", "value": 0.999}
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "solidarytech:donation:availability:ratio5m"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Latencia p95 - /donations",
+          "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "orange", "value": 0.2},
+                  {"color": "red", "value": 0.3}
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "solidarytech:donation:latency:p95_5m"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Error Budget Consumido - Mes",
+          "gridPos": {"h": 6, "w": 6, "x": 12, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "orange", "value": 50},
+                  {"color": "red", "value": 80}
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "100 * (1 - avg_over_time(solidarytech:donation:availability:ratio5m[30d])) / 0.001"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Throughput - RPS",
+          "gridPos": {"h": 6, "w": 6, "x": 18, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null}
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(solidarytech_http_requests_total{service=\"donation-service\",route=\"/donations\"}[5m]))"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Golden Metric - Latencia",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            }
+          },
+          "targets": [
+            {
+              "refId": "p95",
+              "expr": "histogram_quantile(0.95, sum(rate(solidarytech_http_request_duration_seconds_bucket{service=\"donation-service\",route=\"/donations\"}[5m])) by (le))"
+            },
+            {
+              "refId": "p50",
+              "expr": "histogram_quantile(0.50, sum(rate(solidarytech_http_request_duration_seconds_bucket{service=\"donation-service\",route=\"/donations\"}[5m])) by (le))"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Golden Metric - Erros por Status",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (status) (rate(solidarytech_http_requests_total{service=\"donation-service\",route=\"/donations\"}[5m]))"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Kubernetes - CPU por Pod",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "cores"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"donation\",container=\"donation-service\"}[5m]))"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Kubernetes - Memoria por Pod",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"donation\",container=\"donation-service\"})"
+            }
+          ]
+        },
+        {
+          "type": "logs",
+          "title": "Logs - Donation Service",
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 22},
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "{k8s_namespace_name=\"donation\"}"
+            }
+          ]
+        }
+      ]
+    }

@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: donation-service
+  namespace: observability
+  labels:
+    release: kube-prometheus-stack
+    app.kubernetes.io/part-of: solidarytech
+spec:
+  namespaceSelector:
+    matchNames:
+      - donation
+  selector:
+    matchLabels:
+      app: donation-service
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
