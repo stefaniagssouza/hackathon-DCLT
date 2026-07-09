@@ -1,0 +1,55 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: donation-slo
+  namespace: observability
+  labels:
+    release: kube-prometheus-stack
+    app.kubernetes.io/part-of: solidarytech
+spec:
+  groups:
+    - name: donation-service-slo
+      rules:
+        - record: solidarytech:donation:availability:ratio5m
+          expr: |
+            1 - (
+              sum(rate(solidarytech_http_requests_total{service="donation-service",route="/donations",status=~"5.."}[5m]))
+              /
+              clamp_min(sum(rate(solidarytech_http_requests_total{service="donation-service",route="/donations"}[5m])), 0.001)
+            )
+        - record: solidarytech:donation:latency:p95_5m
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum(rate(solidarytech_http_request_duration_seconds_bucket{service="donation-service",route="/donations"}[5m])) by (le)
+            )
+        - alert: DonationServiceHighErrorRate
+          expr: solidarytech:donation:availability:ratio5m < 0.999
+          for: 10m
+          labels:
+            severity: critical
+            slo: donation-availability
+          annotations:
+            summary: "Donation service abaixo do SLO de disponibilidade"
+            description: "A disponibilidade do hot path de doacoes ficou abaixo de 99.9% por 10 minutos."
+        - alert: DonationServiceHighLatencyP95
+          expr: solidarytech:donation:latency:p95_5m > 0.3
+          for: 10m
+          labels:
+            severity: warning
+            slo: donation-latency
+          annotations:
+            summary: "Donation service com latencia p95 acima do SLO"
+            description: "A latencia p95 de /donations ficou acima de 300 ms por 10 minutos."
+        - alert: DonationServiceFastBurnErrorBudget
+          expr: |
+            (
+              1 - solidarytech:donation:availability:ratio5m
+            ) > (14.4 * 0.001)
+          for: 5m
+          labels:
+            severity: critical
+            slo: donation-error-budget
+          annotations:
+            summary: "Consumo acelerado do Error Budget de doacoes"
+            description: "O hot path esta queimando o orcamento de erro rapido demais para um SLO mensal de 99.9%."
