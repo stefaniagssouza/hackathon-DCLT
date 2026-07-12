@@ -24,16 +24,16 @@ metadata:
     app.kubernetes.io/part-of: solidarytech
     cost-center: NGO-Core
     environment: production
-# ---
-# apiVersion: v1
-# kind: Namespace
-# metadata:
-#   name: observability
-#   labels:
-#     app.kubernetes.io/part-of: solidarytech
-#     cost-center: NGO-Core
-#     environment: production
-# ---
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+  labels:
+    app.kubernetes.io/part-of: solidarytech
+    cost-center: NGO-Core
+    environment: production
+---
 # apiVersion: v1
 # kind: Namespace
 # metadata:
