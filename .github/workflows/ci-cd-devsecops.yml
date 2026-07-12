@@ -12,14 +12,11 @@ permissions:
   security-events: write
   id-token: write
 
-# env:
-#   REGISTRY: ghcr.io
-#   IMAGE_NAMESPACE: ${{ github.repository }}
-
 jobs:
   validate:
     name: Testes e scans
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,6 +58,7 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
 
+
   build-and-push:
     name: Build e push das imagens
     runs-on: ubuntu-latest
@@ -71,13 +69,17 @@ jobs:
         include:
           - service: ngo-service
             context: ngo-service
+
           - service: donation-service
             context: donation-service
+
           - service: volunteer-service
             context: volunteer-service
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -87,28 +89,49 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
 
+
       - name: Login Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
+
 
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}
+
           tags: |
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push
+
+      - name: Show generated image tags
+        run: |
+          echo "Images geradas:"
+          echo "${{ steps.meta.outputs.tags }}"
+
+
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+
+      - name: Verify image in ECR
+        run: |
+          aws ecr describe-images \
+            --repository-name ${{ matrix.service }} \
+            --region ${{ secrets.AWS_REGION }} \
+            --query 'imageDetails[*].[imageTags,imageDigest]' \
+            --output json
+
 
   # terraform-validate:
   #   name: Terraform validate
