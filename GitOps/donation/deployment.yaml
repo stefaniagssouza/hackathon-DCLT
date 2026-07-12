@@ -29,7 +29,7 @@ spec:
       serviceAccountName: donation-service
       containers:
         - name: donation-service
-          image: 914963610886.dkr.ecr.us-east-1.amazonaws.com/donation-service:latest
+          image: 914963610886.dkr.ecr.us-east-1.amazonaws.com/donation-service:<sha256:{{ github.sha }}>
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
