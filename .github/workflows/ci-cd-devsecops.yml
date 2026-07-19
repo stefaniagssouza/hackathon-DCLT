@@ -137,9 +137,9 @@ jobs:
 
       - name: Update deployment manifest
         run: |
-          sed -i "s|image:.*|image: ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}|g" \
-            ${{ matrix.deployment }}
-      
+          IMAGE=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          sed -i "s|image:.*|image: ${IMAGE}|g" "${{ matrix.deployment }}"
+          
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
