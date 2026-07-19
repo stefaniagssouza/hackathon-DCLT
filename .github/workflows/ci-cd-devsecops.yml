@@ -69,15 +69,15 @@ jobs:
         include:
           - service: ngo-service
             context: ngo-service
-            deployment: hackathon-DCLT/GitOps/ngo/deployment.yaml
+            deployment: GitOps/ngo/deployment.yaml
 
           - service: donation-service
             context: donation-service
-            deployment: hackathon-DCLT/GitOps/donation/deployment.yaml
+            deployment: GitOps/donation/deployment.yaml
 
           - service: volunteer-service
             context: volunteer-service
-            deployment: hackathon-DCLT/GitOps/volunteer/deployment.yaml
+            deployment: GitOps/volunteer/deployment.yaml
 
     steps:
       - name: Checkout
