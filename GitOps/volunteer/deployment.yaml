@@ -25,7 +25,7 @@ spec:
       serviceAccountName: volunteer-service
       containers:
         - name: volunteer-service
-          image: 914963610886.dkr.ecr.us-east-1.amazonaws.com/volunteer-service:f3ebc4f
+          image: 914963610886.dkr.ecr.us-east-1.amazonaws.com/volunteer-service:4dd0e89
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
