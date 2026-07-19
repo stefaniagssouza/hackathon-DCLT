@@ -27,7 +27,7 @@ spec:
       serviceAccountName: ngo-service
       containers:
         - name: ngo-service
-          image: 914963610886.dkr.ecr.us-east-1.amazonaws.com/ngo-service:9c420f6
+          image: 914963610886.dkr.ecr.us-east-1.amazonaws.com/ngo-service:89e69c96e43df3dfc50967c225f9a81059b6e687
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
