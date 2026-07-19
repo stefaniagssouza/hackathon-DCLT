@@ -74,7 +74,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-    steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
