@@ -132,6 +132,15 @@ jobs:
             --query 'imageDetails[*].[imageTags,imageDigest]' \
             --output json
 
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/${{ matrix.service }} \
+            ${{ matrix.service }}=${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }} \
+            -n ${{ matrix.namespace }}
+
+          kubectl rollout status deployment/${{ matrix.service }} \
+            -n ${{ matrix.namespace }}
+
 
   # terraform-validate:
   #   name: Terraform validate
