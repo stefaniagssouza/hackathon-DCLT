@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 permissions:
-  contents: read
+  contents: write
   packages: write
   security-events: write
   id-token: write
@@ -139,6 +139,21 @@ jobs:
         run: |
           sed -i "s|image:.*|image: ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}|g" \
             ${{ matrix.deployment }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit deployment changes
+        run: |
+          git add ${{ matrix.deployment }}
+
+          git commit -m "Deploy ${{ matrix.service }} ${{ github.sha }}" || echo "No changes"
+
+      - name: Push changes
+        run: |
+          git push
 
 
   # terraform-validate:
