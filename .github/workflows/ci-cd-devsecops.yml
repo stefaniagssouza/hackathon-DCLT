@@ -69,12 +69,15 @@ jobs:
         include:
           - service: ngo-service
             context: ngo-service
+            deployment: hackathon-DCLT/GitOps/ngo/deployment.yaml
 
           - service: donation-service
             context: donation-service
+            deployment: hackathon-DCLT/GitOps/donation/deployment.yaml
 
           - service: volunteer-service
             context: volunteer-service
+            deployment: hackathon-DCLT/GitOps/volunteer/deployment.yaml
 
     steps:
       - name: Checkout
@@ -132,14 +135,10 @@ jobs:
             --query 'imageDetails[*].[imageTags,imageDigest]' \
             --output json
 
-      - name: Update deployment image
+      - name: Update deployment manifest
         run: |
-          kubectl set image deployment/${{ matrix.service }} \
-            ${{ matrix.service }}=${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }} \
-            -n ${{ matrix.namespace }}
-
-          kubectl rollout status deployment/${{ matrix.service }} \
-            -n ${{ matrix.namespace }}
+          sed -i "s|image:.*|image: ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}|g" \
+            ${{ matrix.deployment }}
 
 
   # terraform-validate:

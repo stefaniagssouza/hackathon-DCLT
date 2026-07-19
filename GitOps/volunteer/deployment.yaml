@@ -25,7 +25,7 @@ spec:
       serviceAccountName: volunteer-service
       containers:
         - name: volunteer-service
-          image: 914963610886.dkr.ecr.us-east-1.amazonaws.com/volunteer-service:<sha256:{{ github.sha }}>
+          image: 914963610886.dkr.ecr.us-east-1.amazonaws.com/volunteer-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
