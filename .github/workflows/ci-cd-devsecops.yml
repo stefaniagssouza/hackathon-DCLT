@@ -64,37 +64,17 @@ jobs:
       matrix:
         include:
           - service: donation-service
-            context: donation-service
           - service: ngo-service
-            context: ngo-service
           - service: volunteer-service
-            context: volunteer-service
     steps:
-      - uses: actions/checkout@v4
-
-      # Configura as credenciais da AWS (necessário para o passo de verificação/simulação se houver)
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-
-      # Como o push está bloqueado pelo Vocareum, simulamos o build local para garantir que o código compila em um container
-      - name: Build Local (Sem Push)
-        run: |
-          docker build -t ${{ matrix.service }}:${{ github.sha }} ${{ matrix.context }}
-
-      # Geramos e salvamos a tag que o ECR usaria para que o seu GitOps funcione perfeitamente no próximo Job
-      - name: Save first generated tag
+      # Não precisamos buildar nada localmente já que não podemos enviar.
+      # Apenas geramos o arquivo de tag apontando para o 'latest' que já existe no seu ECR.
+      - name: Save existing ECR tag
         run: |
           mkdir -p out
-          echo "${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}" > out/${{ matrix.service }}.txt
+          echo "${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:latest" > out/${{ matrix.service }}.txt
 
-      # Exporta o artefato para o Job do GitOps
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: image-tags-${{ matrix.service }}
           path: out/${{ matrix.service }}.txt
@@ -114,8 +94,7 @@ jobs:
           path: tags
           merge-multiple: true
 
-      # Atualiza todos os manifestos em um único Job sequencial (Sem Race Conditions)
-      - name: Update manifests
+      - name: Update manifests to latest
         run: |
           sed -i "s|image: .*|image: $(cat tags/donation-service.txt)|" GitOps/donation/deployment.yaml
           sed -i "s|image: .*|image: $(cat tags/ngo-service.txt)|" GitOps/ngo/deployment.yaml
@@ -130,7 +109,7 @@ jobs:
             echo "Nenhuma alteração nos manifestos."
             exit 0
           fi
-          git commit -m "Update GitOps images to ${{ github.sha }}"
+          git commit -m "Fix GitOps images to latest available in ECR"
           git push origin HEAD:main
 
 
