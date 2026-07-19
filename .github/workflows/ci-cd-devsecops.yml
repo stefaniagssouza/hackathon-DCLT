@@ -60,28 +60,27 @@ jobs:
 
 
   build-and-push:
-    name: Build e push das imagens
-    runs-on: ubuntu-latest
     needs: validate
-
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - service: ngo-service
-            context: ngo-service
-            deployment: GitOps/ngo/deployment.yaml
-
           - service: donation-service
             context: donation-service
-            deployment: GitOps/donation/deployment.yaml
-
+          - service: ngo-service
+            context: ngo-service
           - service: volunteer-service
             context: volunteer-service
-            deployment: GitOps/volunteer/deployment.yaml
+    steps:
+      - uses: actions/checkout@v4
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
 
       - name: Configure AWS Credentials
@@ -135,25 +134,46 @@ jobs:
             --query 'imageDetails[*].[imageTags,imageDigest]' \
             --output json
 
-      - name: Update deployment manifest
+      - name: Save first generated tag
         run: |
-          IMAGE=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
-          sed -i "s|image:.*|image: ${IMAGE}|g" "${{ matrix.deployment }}"
-          
-      - name: Configure Git
+          mkdir -p out
+          echo "${{ steps.meta.outputs.tags }}" | head -n1 > out/${{ matrix.service }}.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-tags-${{ matrix.service }}
+          path: out/${{ matrix.service }}.txt
+
+  update-gitops:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: image-tags-*
+          path: tags
+          merge-multiple: true
+
+      - name: Update manifests
+        run: |
+          sed -i "s|image: .*|image: $(cat tags/donation-service.txt)|" GitOps/donation/deployment.yaml
+          sed -i "s|image: .*|image: $(cat tags/ngo-service.txt)|" GitOps/ngo/deployment.yaml
+          sed -i "s|image: .*|image: $(cat tags/volunteer-service.txt)|" GitOps/volunteer/deployment.yaml
+
+      - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit deployment changes
-        run: |
-          git add ${{ matrix.deployment }}
-
-          git commit -m "Deploy ${{ matrix.service }} ${{ github.sha }}" || echo "No changes"
-
-      - name: Push changes
-        run: |
-          git push
+          git add GitOps
+          git diff --cached --quiet && exit 0
+          git commit -m "Update GitOps manifests"
+          git push origin HEAD:main
 
 
   # terraform-validate:
