@@ -1,4 +1,5 @@
-Flask==2.2.2
+Flask==2.3.3
+Werkzeug==3.0.1
 psycopg2-binary==2.9.5
 gunicorn==20.1.0
 python-dotenv==0.21.0
@@ -8,4 +9,3 @@ opentelemetry-instrumentation-flask
 opentelemetry-exporter-otlp-proto-http
 opentelemetry-instrumentation-psycopg2
 opentelemetry-instrumentation-botocore
-Werkzeug==2.3.7
