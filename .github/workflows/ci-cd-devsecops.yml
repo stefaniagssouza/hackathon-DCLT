@@ -103,9 +103,11 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}
+          flavor: |
+            latest=true
           tags: |
             type=sha,prefix=
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=pr
 
 
       - name: Show generated image tags
