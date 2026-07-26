@@ -8,3 +8,4 @@ opentelemetry-instrumentation-flask
 opentelemetry-exporter-otlp-proto-http
 opentelemetry-instrumentation-psycopg2
 opentelemetry-instrumentation-botocore
+Werkzeug==2.3.7
