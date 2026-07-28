@@ -1,0 +1,32 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: solidarytech-hourly-backup
+  namespace: velero
+spec:
+  # Backup a cada hora — alinha com RPO de 1 hora definido no PCN
+  schedule: "0 * * * *"
+
+  template:
+    # Faz backup de todos os namespaces da aplicação
+    includedNamespaces:
+      - default
+      - solidarytech
+      - argocd
+      - monitoring
+
+    # Inclui volumes persistentes (PVCs)
+    snapshotVolumes: true
+
+    # Retenção de 7 dias — alinha com lifecycle do bucket S3
+    ttl: 168h0m0s
+
+    storageLocation: aws-s3
+    volumeSnapshotLocations:
+      - aws-ebs
+
+    # Labels para rastreabilidade
+    labels:
+      app: solidarytech
+      managed-by: velero
+      backup-type: scheduled

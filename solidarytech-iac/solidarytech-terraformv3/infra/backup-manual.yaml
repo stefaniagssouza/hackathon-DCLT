@@ -1,0 +1,22 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: solidarytech-manual-backup
+  namespace: velero
+  labels:
+    app: solidarytech
+    managed-by: velero
+    backup-type: manual
+spec:
+  includedNamespaces:
+    - default
+    - solidarytech
+    - argocd
+    - monitoring
+
+  snapshotVolumes: true
+  ttl: 168h0m0s
+
+  storageLocation: aws-s3
+  volumeSnapshotLocations:
+    - aws-ebs
